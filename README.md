@@ -29,3 +29,6 @@ ai-agent-exfiltration-detection/
 
 ### Running Detection Tests
 Refer to [commands.md](file:///C:/Users/USER/Downloads/ai-agent-exfiltration-detection/docs/poc/commands.md) for instructions on executing test harnesses and viewing detection alerts.
+
+### Proof of Concept (PoC)
+See [poc-report.md](file:///C:/Users/USER/Downloads/ai-agent-exfiltration-detection/docs/poc/poc-report.md) for the Floci emulator setup, baseline S3-to-receiver flow, and container persistence verification.

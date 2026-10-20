@@ -1,0 +1,2 @@
+SYNTHETIC TEST DATA ONLY
+Receiver test
