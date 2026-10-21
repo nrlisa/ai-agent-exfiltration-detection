@@ -1,0 +1,4 @@
+
+# Local Floci state backup - do not commit
+/floci-state-backup-data/
+/floci-state-backup.tar.gz
