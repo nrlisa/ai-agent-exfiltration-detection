@@ -1,0 +1,19 @@
+{
+  "TrailName": "fyp-poc-trail",
+  "EventSelectors": [
+    {
+      "ReadWriteType": "All",
+      "IncludeManagementEvents": true,
+      "DataResources": [
+        {
+          "Type": "AWS::S3::Object",
+          "Values": [
+            "arn:aws:s3:::fyp-persistence-test/",
+            "arn:aws:s3:::fyp-experiment-data/",
+            "arn:aws:s3:::fyp-exfil-sink/"
+          ]
+        }
+      ]
+    }
+  ]
+}

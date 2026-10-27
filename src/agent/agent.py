@@ -8,33 +8,49 @@ from urllib.request import Request, urlopen
 
 import boto3
 from botocore.config import Config
+from dotenv import load_dotenv
+
+# Load local experiment credentials from .env
+load_dotenv()
 
 S3_ENDPOINT = "http://localhost:4567"
-BUCKET = "fyp-persistence-test"
-OBJECT_KEY = "synthetic/test-data.txt"
+BUCKET = "fyp-experiment-data"
+OBJECT_KEY = "synthetic/experiment-test-data.txt"
 RECEIVER_URL = "http://127.0.0.1:8080/transfer"
 
 OUTPUT_DIR = Path("poc-data/agent-logs")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Local emulator credentials only. Never use real AWS credentials here.
+# Require dedicated experiment credentials; do not fall back to test/test.
+ACCESS_KEY = os.getenv("EXPERIMENT_AGENT_ACCESS_KEY")
+SECRET_KEY = os.getenv("EXPERIMENT_AGENT_SECRET_KEY")
+
+if not ACCESS_KEY or not SECRET_KEY:
+    raise RuntimeError(
+        "Missing EXPERIMENT_AGENT_ACCESS_KEY or "
+        "EXPERIMENT_AGENT_SECRET_KEY in .env"
+    )
+
+# Local Floci S3 client using the experiment-agent IAM identity.
 s3 = boto3.client(
     "s3",
     endpoint_url=S3_ENDPOINT,
     region_name="us-east-1",
-    aws_access_key_id=os.getenv("FLOCI_ACCESS_KEY", "test"),
-    aws_secret_access_key=os.getenv("FLOCI_SECRET_KEY", "test"),
+    aws_access_key_id=ACCESS_KEY,
+    aws_secret_access_key=SECRET_KEY,
     config=Config(s3={"addressing_style": "path"}),
 )
 
 started_at = datetime.now(timezone.utc).isoformat()
 
+# Retrieve the synthetic source object.
 response = s3.get_object(Bucket=BUCKET, Key=OBJECT_KEY)
 with response["Body"] as body:
     payload = body.read()
 
 payload_hash = hashlib.sha256(payload).hexdigest()
 
+# Send the retrieved data to the local receiver.
 request = Request(
     RECEIVER_URL,
     data=payload,

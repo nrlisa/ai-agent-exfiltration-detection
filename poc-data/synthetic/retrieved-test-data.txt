@@ -1,0 +1,3 @@
+SYNTHETIC TEST DATA ONLY
+Record A: demo-value-001
+Record B: demo-value-002
