@@ -1,0 +1,282 @@
+[
+  {
+    "source_file": "poc-data\\cloudtrail-logs\\experiment-2026-10-27\\000000000000_CloudTrail_us-east-1_20261027T1006Z_SSYeqMUPPFZPOdHh.json.gz",
+    "source_record_index": 1,
+    "event": {
+      "eventVersion": "1.11",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAAAAAAAAAAAAAAAAAA",
+        "arn": "MASKED",
+        "accountId": "000000000000",
+        "accessKeyId": "test",
+        "userName": "root"
+      },
+      "eventTime": "2026-10-27T10:06:00Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "GetObject",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "172.17.0.1",
+      "userAgent": "aws-cli/2.36.24 md/awscrt#0.36.2 ua/2.1 os/windows#11 md/arch#amd64 lang/python#3.14.6 md/pyimpl#CPython m/G,Z,E,N,b cfg/retry-mode#standard md/installer#exe sid/0a0541034ecf md/prompt#off md/command#s3.cp",
+      "requestParameters": {
+        "Host": "fyp-experiment-data.s3.amazonaws.com",
+        "key": "synthetic/experiment-test-data.txt"
+      },
+      "responseElements": null,
+      "additionalEventData": {
+        "SignatureVersion": "SigV4",
+        "CipherSuite": "TLS_AES_128_GCM_SHA256",
+        "bytesTransferredIn": 0,
+        "AuthenticationMethod": "AuthHeader",
+        "bytesTransferredOut": 75
+      },
+      "requestID": "50E48B0F94914028",
+      "eventID": "33c2dee3-0fc9-45da-a221-30db21e31861",
+      "readOnly": true,
+      "resources": [
+        {
+          "accountId": "000000000000",
+          "type": "AWS::S3::Bucket",
+          "ARN": "arn:aws:s3:::fyp-experiment-data"
+        },
+        {
+          "type": "AWS::S3::Object",
+          "ARN": "arn:aws:s3:::fyp-experiment-data/synthetic/experiment-test-data.txt"
+        }
+      ],
+      "eventType": "AwsApiCall",
+      "managementEvent": false,
+      "eventCategory": "Data",
+      "tlsDetails": {
+        "tlsVersion": "TLSv1.3",
+        "cipherSuite": "TLS_AES_128_GCM_SHA256",
+        "clientProvidedHostHeader": "fyp-experiment-data.s3.amazonaws.com"
+      },
+      "recipientAccountId": "000000000000"
+    }
+  },
+  {
+    "source_file": "poc-data\\cloudtrail-logs\\experiment-2026-10-27\\000000000000_CloudTrail_us-east-1_20261027T1055Z_tcjQc3ffYmrgcPMd.json.gz",
+    "source_record_index": 1,
+    "event": {
+      "eventVersion": "1.11",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAOJ1OR0IQR697DNG7",
+        "arn": "MASKED",
+        "accountId": "000000000000",
+        "accessKeyId": "AKIAHW9H1UJLZC4V0X9M",
+        "userName": "experiment-agent"
+      },
+      "eventTime": "2026-10-27T10:55:00Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "GetObject",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "172.17.0.1",
+      "userAgent": "Boto3/1.43.115 md/Botocore#1.43.115 ua/2.1 os/windows#11 md/arch#amd64 lang/python#3.13.14 md/pyimpl#CPython m/Z,b,N,e,D cfg/retry-mode#legacy Botocore/1.43.115",
+      "requestParameters": {
+        "Host": "fyp-experiment-data.s3.amazonaws.com",
+        "key": "synthetic/experiment-test-data.txt"
+      },
+      "responseElements": null,
+      "additionalEventData": {
+        "SignatureVersion": "SigV4",
+        "CipherSuite": "TLS_AES_128_GCM_SHA256",
+        "bytesTransferredIn": 0,
+        "AuthenticationMethod": "AuthHeader",
+        "bytesTransferredOut": 75
+      },
+      "requestID": "462CEBFC40644846",
+      "eventID": "db687062-e077-46e1-9b3a-c3b3f3fb58a2",
+      "readOnly": true,
+      "resources": [
+        {
+          "accountId": "000000000000",
+          "type": "AWS::S3::Bucket",
+          "ARN": "arn:aws:s3:::fyp-experiment-data"
+        },
+        {
+          "type": "AWS::S3::Object",
+          "ARN": "arn:aws:s3:::fyp-experiment-data/synthetic/experiment-test-data.txt"
+        }
+      ],
+      "eventType": "AwsApiCall",
+      "managementEvent": false,
+      "eventCategory": "Data",
+      "tlsDetails": {
+        "tlsVersion": "TLSv1.3",
+        "cipherSuite": "TLS_AES_128_GCM_SHA256",
+        "clientProvidedHostHeader": "fyp-experiment-data.s3.amazonaws.com"
+      },
+      "recipientAccountId": "000000000000"
+    }
+  },
+  {
+    "source_file": "poc-data\\cloudtrail-logs\\experiment-2026-10-27\\000000000000_CloudTrail_us-east-1_20261027T1100Z_4tP4i64ax06qsQbq.json.gz",
+    "source_record_index": 1,
+    "event": {
+      "eventVersion": "1.11",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAOJ1OR0IQR697DNG7",
+        "arn": "MASKED",
+        "accountId": "000000000000",
+        "accessKeyId": "AKIAHW9H1UJLZC4V0X9M",
+        "userName": "experiment-agent"
+      },
+      "eventTime": "2026-10-27T11:00:00Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "GetObject",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "172.17.0.1",
+      "userAgent": "Boto3/1.43.115 md/Botocore#1.43.115 ua/2.1 os/windows#11 md/arch#amd64 lang/python#3.13.14 md/pyimpl#CPython m/N,Z,D,b,e cfg/retry-mode#legacy Botocore/1.43.115",
+      "requestParameters": {
+        "Host": "fyp-experiment-data.s3.amazonaws.com",
+        "key": "synthetic/experiment-test-data.txt"
+      },
+      "responseElements": null,
+      "additionalEventData": {
+        "SignatureVersion": "SigV4",
+        "CipherSuite": "TLS_AES_128_GCM_SHA256",
+        "bytesTransferredIn": 0,
+        "AuthenticationMethod": "AuthHeader",
+        "bytesTransferredOut": 75
+      },
+      "requestID": "2EC2A8B04BDE48C4",
+      "eventID": "1afcfc71-6e32-4d1b-8626-ada8bbe30475",
+      "readOnly": true,
+      "resources": [
+        {
+          "accountId": "000000000000",
+          "type": "AWS::S3::Bucket",
+          "ARN": "arn:aws:s3:::fyp-experiment-data"
+        },
+        {
+          "type": "AWS::S3::Object",
+          "ARN": "arn:aws:s3:::fyp-experiment-data/synthetic/experiment-test-data.txt"
+        }
+      ],
+      "eventType": "AwsApiCall",
+      "managementEvent": false,
+      "eventCategory": "Data",
+      "tlsDetails": {
+        "tlsVersion": "TLSv1.3",
+        "cipherSuite": "TLS_AES_128_GCM_SHA256",
+        "clientProvidedHostHeader": "fyp-experiment-data.s3.amazonaws.com"
+      },
+      "recipientAccountId": "000000000000"
+    }
+  },
+  {
+    "source_file": "poc-data\\cloudtrail-logs\\experiment-2026-10-27\\000000000000_CloudTrail_us-east-1_20261027T1100Z_4tP4i64ax06qsQbq.json.gz",
+    "source_record_index": 2,
+    "event": {
+      "eventVersion": "1.11",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAOJ1OR0IQR697DNG7",
+        "arn": "MASKED",
+        "accountId": "000000000000",
+        "accessKeyId": "AKIAHW9H1UJLZC4V0X9M",
+        "userName": "experiment-agent"
+      },
+      "eventTime": "2026-10-27T11:00:00Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "GetObject",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "172.17.0.1",
+      "userAgent": "Boto3/1.43.115 md/Botocore#1.43.115 ua/2.1 os/windows#11 md/arch#amd64 lang/python#3.13.14 md/pyimpl#CPython m/D,Z,e,N,b cfg/retry-mode#legacy Botocore/1.43.115",
+      "requestParameters": {
+        "Host": "fyp-experiment-data.s3.amazonaws.com",
+        "key": "synthetic/experiment-test-data.txt"
+      },
+      "responseElements": null,
+      "additionalEventData": {
+        "SignatureVersion": "SigV4",
+        "CipherSuite": "TLS_AES_128_GCM_SHA256",
+        "bytesTransferredIn": 0,
+        "AuthenticationMethod": "AuthHeader",
+        "bytesTransferredOut": 75
+      },
+      "requestID": "3C6966D168E640F9",
+      "eventID": "539157e8-062e-4bb1-9ee2-8409d4dbd4e5",
+      "readOnly": true,
+      "resources": [
+        {
+          "accountId": "000000000000",
+          "type": "AWS::S3::Bucket",
+          "ARN": "arn:aws:s3:::fyp-experiment-data"
+        },
+        {
+          "type": "AWS::S3::Object",
+          "ARN": "arn:aws:s3:::fyp-experiment-data/synthetic/experiment-test-data.txt"
+        }
+      ],
+      "eventType": "AwsApiCall",
+      "managementEvent": false,
+      "eventCategory": "Data",
+      "tlsDetails": {
+        "tlsVersion": "TLSv1.3",
+        "cipherSuite": "TLS_AES_128_GCM_SHA256",
+        "clientProvidedHostHeader": "fyp-experiment-data.s3.amazonaws.com"
+      },
+      "recipientAccountId": "000000000000"
+    }
+  },
+  {
+    "source_file": "poc-data\\cloudtrail-logs\\experiment-2026-10-27\\000000000000_CloudTrail_us-east-1_20261027T1102Z_9A2lZWKBk3dXgKJQ.json.gz",
+    "source_record_index": 1,
+    "event": {
+      "eventVersion": "1.11",
+      "userIdentity": {
+        "type": "IAMUser",
+        "principalId": "AIDAOJ1OR0IQR697DNG7",
+        "arn": "MASKED",
+        "accountId": "000000000000",
+        "accessKeyId": "AKIAHW9H1UJLZC4V0X9M",
+        "userName": "experiment-agent"
+      },
+      "eventTime": "2026-10-27T11:01:00Z",
+      "eventSource": "s3.amazonaws.com",
+      "eventName": "GetObject",
+      "awsRegion": "us-east-1",
+      "sourceIPAddress": "172.17.0.1",
+      "userAgent": "Boto3/1.43.115 md/Botocore#1.43.115 ua/2.1 os/windows#11 md/arch#amd64 lang/python#3.13.14 md/pyimpl#CPython m/b,D,Z,N,e cfg/retry-mode#legacy Botocore/1.43.115",
+      "requestParameters": {
+        "Host": "fyp-experiment-data.s3.amazonaws.com",
+        "key": "synthetic/experiment-test-data.txt"
+      },
+      "responseElements": null,
+      "additionalEventData": {
+        "SignatureVersion": "SigV4",
+        "CipherSuite": "TLS_AES_128_GCM_SHA256",
+        "bytesTransferredIn": 0,
+        "AuthenticationMethod": "AuthHeader",
+        "bytesTransferredOut": 75
+      },
+      "requestID": "F79B0D893C414854",
+      "eventID": "474f64d8-0f37-480d-8524-14bb9c954794",
+      "readOnly": true,
+      "resources": [
+        {
+          "accountId": "000000000000",
+          "type": "AWS::S3::Bucket",
+          "ARN": "arn:aws:s3:::fyp-experiment-data"
+        },
+        {
+          "type": "AWS::S3::Object",
+          "ARN": "arn:aws:s3:::fyp-experiment-data/synthetic/experiment-test-data.txt"
+        }
+      ],
+      "eventType": "AwsApiCall",
+      "managementEvent": false,
+      "eventCategory": "Data",
+      "tlsDetails": {
+        "tlsVersion": "TLSv1.3",
+        "cipherSuite": "TLS_AES_128_GCM_SHA256",
+        "clientProvidedHostHeader": "fyp-experiment-data.s3.amazonaws.com"
+      },
+      "recipientAccountId": "000000000000"
+    }
+  }
+]
