@@ -2,20 +2,20 @@
 
 **Project:** AI-Agent Data Exfiltration Detection Framework  
 **FYP Title:** Design and Evaluation of Monitoring Strategies for Detecting AI-Agent Data Exfiltration under Incomplete Cloud Audit Evidence  
-**Status:** Core local S3-to-receiver pipeline & persistence verified  
-**Date:** 20 October 2026 | **Environment:** Windows, Git Bash, Docker, AWS CLI, Python/boto3
+**Status:** FYP1 M1 PoC evidence consolidated; M1 gate remains conditional pending detector-input connection
+**Updated:** 27 October 2026 | **Environment:** Windows, Git Bash, Docker, AWS CLI, Python/boto3
 
 ---
 
 ## 1. Purpose & Scope
 
-Validates the local cloud-emulation testbed (Floci) for the FYP baseline:
+This report records the FYP1 M1 feasibility PoC for the local cloud-emulation testbed (Floci):
 - S3-compatible synthetic data storage and retrieval (AWS CLI & Python/boto3 agent).
 - CloudTrail-format audit event generation and delivery for object-level access.
 - Exfiltration to a local HTTP receiver with SHA-256 integrity verification.
 - State and audit log persistence across container restarts.
 
-> **Note:** Uses synthetic data in a local emulator; does not evaluate monitoring strategies or the full 520-run experimental matrix.
+> **M1 scope:** This is a local synthetic-data PoC. It checks that storage, audit evidence, and outbound transfer can be demonstrated and identifies whether the baseline is feasible. It does not evaluate monitoring strategies or claim the full FYP system is complete. The Gantt's FYP1 M1 gate also calls for detector input to be connected; that connection is not yet evidenced below.
 
 ---
 
@@ -33,6 +33,8 @@ Python Agent (boto3)
        ▼
 Local Receiver (127.0.0.1:8080) ──► Transfers JSONL + SHA-256 Hash
 ```
+
+CloudTrail records are synced to local compressed JSON files and inspected with `scripts/inspect_cloudtrail.py`. The current repository demonstrates event inspection and agent-to-receiver transfer as separate outputs; it does not yet demonstrate an audit event entering a detector-input interface.
 
 ### 2.1 Floci Container & Volume Setup
 Persistent container `floci-persistent` mapped to port `4567` (`FLOCI_STORAGE_MODE=persistent`, `/app/data` mounted on named volume `floci-persistent-data`).
@@ -111,8 +113,10 @@ aws --endpoint-url=http://localhost:4567 cloudtrail get-trail-status --name fyp-
 ### 4.4 CloudTrail Log Sync & Inspection
 ```bash
 aws --endpoint-url=http://localhost:4567 s3 sync s3://fyp-persistence-test/AWSLogs/ poc-data/cloudtrail-logs/AWSLogs/
-python scripts/inspect_cloudtrail.py
+python scripts/inspect_cloudtrail.py --target old-poc
 ```
+Use `--target experiment` (the default) for the experiment bucket. The older screenshots and event table in this report refer to the `old-poc` target.
+
 > **Evidence (SS-08 - CloudTrail GetObject Events):**  
 > ![SS-08: CloudTrail GetObject Events](evidences/08-cloudtrail-getobject-events.png)
 
@@ -138,6 +142,8 @@ python scripts/inspect_cloudtrail.py
 | **Payload Hash** | `1819059edc21d93eebbe0c452a51a6d6d43923833c3140a5f9939f36b5aa5276` | `1819059edc21d93eebbe0c452a51a6d6d43923833c3140a5f9939f36b5aa5276` |
 
 *Integrity verified:* Exact byte size and SHA-256 match confirmed across agent transmission and receiver reception.
+
+The committed experiment logs also contain a 27 October 2026 run with a 75-byte payload, HTTP 200 response, and matching SHA-256 at the receiver. The repository contains two agent-run records and three receiver records overall; these logs do not share a common run ID, so they do not establish one-to-one joins for every transfer and CloudTrail event.
 
 > **Evidence (SS-06 - Agent Run Success):**  
 > ![SS-06: Agent Success](evidences/06-agent-success.png)
@@ -187,24 +193,33 @@ All screenshot evidence is stored in `docs/poc/evidences/` and embedded under th
 
 ---
 
-## 7. Validation Checklist
+## 7. FYP1 M1 Checklist and Feasibility Assessment
 
-- [x] Persistent Floci API operational on port 4567
-- [x] Synthetic S3 object present and retrievable (75 bytes)
-- [x] CloudTrail trail configured with S3 data events
-- [x] Trail actively logging (`IsLogging: true`)
-- [x] `GetObject` audit events generated in CloudTrail logs
-- [x] Python agent retrieves payload and delivers to receiver
-- [x] Payload SHA-256 hash verified identically at receiver
-- [x] Container restart preserves configuration and historical data
-- [x] New post-restart access events captured and delivered
+The project Gantt places FYP1 M1 at W4 and names the deliverable “PoC checklist and evidence.” Its gate is a proof of concept connecting cloud storage, audit evidence, receiver, and detector input. Status below is based on the evidence committed in this repository; it does not imply that the local services were re-run during this report update.
 
----
+| M1 acceptance item | Status | Evidence / remaining work |
+| :--- | :--- | :--- |
+| Local Floci environment and persistent state demonstrated | Evidence recorded | SS-01, SS-02, SS-09, and SS-10 document the container, API identity, restart, and post-restart state. |
+| Synthetic S3 object is available and retrievable | Evidence recorded | SS-03 documents the 75-byte object retrieval. |
+| CloudTrail object-level logging and `GetObject` evidence demonstrated | Evidence recorded | SS-04 and SS-05 document trail configuration and logging status; SS-08 and Section 5.1 record matching object-read events. |
+| Outbound receiver accepts the agent payload and verifies integrity | Evidence recorded | SS-06 and SS-07 document the 75-byte transfer, HTTP success, and matching SHA-256. A later experiment run is also present in the committed JSONL logs. |
+| Shared detector-input boundary is demonstrated | **Open — M1 gate not yet met** | The inspector currently prints matching events. No detector-input interface or handoff is present in the checked-in implementation/evidence. Demonstrate one bounded baseline input consistent with the shared contract: verified audit evidence, raw outbound-activity metadata, and shared destination policy. Detector logic and scenario automation are not required for this M1 item. |
+| M1 checklist and feasibility assessment recorded | Recorded here; team sign-off pending | See the assessment below. |
 
-## 8. Next Steps & Operating Notes
+### Feasibility decision
 
-1. **Experimental Baseline:** Retain container `floci-persistent` and volume `floci-persistent-data` without changes.
-2. **Scenarios & Ground Truth:** Formalize benign, overt-exfiltration, and low-volume exfiltration specifications.
-3. **Evidence Degradation:** Develop and benchmark degraded audit transformations (dropped events, delayed logs).
-4. **Detector Evaluation:** Build normalized detector inputs and evaluate 4 monitoring strategies across 520 test runs.
-5. **Timezone Reference:** Audit logs use UTC (`Z`); CLI local timestamps use MYT (`+08:00`). Convert prior to analysis.
+**Repository-based assessment: conditional GO for the scoped local PoC baseline; do not mark the M1 gate complete yet.** The committed evidence supports the feasibility of using Floci to store and retrieve synthetic data, produce and inspect CloudTrail-format object-read events, and demonstrate a local agent-to-receiver transfer with matching payload hashes. The remaining M1 condition is to demonstrate one bounded baseline input at the shared detector-input boundary and attach that evidence to this checklist.
+
+This is a feasibility assessment, not evidence that detection effectiveness has been evaluated. The current evidence is limited to a local emulator, synthetic payloads, and a small PoC record set. It does not establish real-cloud behavior, completed monitoring strategies, scenario coverage, or experiment results. This assessment does not change the approved research question, fixed scripted-agent role, three scenarios, two evidence conditions, four monitoring strategies, or planned 520-run matrix. The enhanced LLM specification remains a monitor design; this PoC does not claim it is implemented. The assessment should be reviewed and signed off by the project team after the open checklist item is closed.
+
+### M1 close-out actions
+
+1. Connect one bounded baseline input consistent with the shared contract: a verified CloudTrail event, raw outbound-activity metadata, and the shared destination policy. Use the complete baseline evidence condition for this demonstration.
+2. Keep the input free of scenario labels, receiver ground truth, and evaluation-manifest data. Capture the input and its source evidence, preserving provenance and avoiding claims of a complete run-level join where the current logs have no shared run ID.
+3. Recheck the checklist statuses against that evidence and record the team's M1 feasibility decision/sign-off.
+
+These actions close the M1 gate only; this report does not treat later milestone work as an M1 requirement.
+
+### Operating note
+
+Audit event timestamps use UTC (`Z`). Convert local CLI timestamps from MYT (`+08:00`) before comparing event times.
