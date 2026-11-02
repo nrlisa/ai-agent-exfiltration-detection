@@ -2,7 +2,7 @@
 
 **Project:** AI-Agent Data Exfiltration Detection Framework  
 **FYP Title:** Design and Evaluation of Monitoring Strategies for Detecting AI-Agent Data Exfiltration under Incomplete Cloud Audit Evidence  
-**Status:** FYP1 M1 PoC evidence consolidated; M1 gate satisfied (cloud storage, audit evidence, receiver, and detector input demonstrated)  
+**Status:** FYP1 M1 PoC evidence consolidated; repository-based feasibility assessment complete (cloud storage, audit evidence, receiver, and detector input demonstrated; pending formal supervisor review)  
 **Updated:** 2 November 2026 | **Environment:** Windows, Git Bash, Docker, AWS CLI, Python/boto3
 
 ---
@@ -103,7 +103,7 @@ aws --endpoint-url=http://localhost:4567 s3api get-object \
 
 ### 4.3 Configure & Verify CloudTrail
 
-Initial trail configuration and event selector setup:
+Initial trail configuration and event selector setup for baseline PoC:
 ```bash
 # Set event selectors for S3 object-level data events
 aws --endpoint-url=http://localhost:4567 cloudtrail put-event-selectors \
@@ -133,7 +133,7 @@ aws $E cloudtrail describe-trails \
 > **Evidence (SS-11 - CloudTrail Existing Trail Configuration):**  
 > ![SS-11: CloudTrail Existing Trail Config](evidences/11-cloudtrail-existing-trail.png)
 
-Verification of trail event selectors:
+Verification of baseline trail event selectors:
 ```bash
 aws $E cloudtrail get-event-selectors \
   --trail-name fyp-poc-trail \
@@ -141,6 +141,8 @@ aws $E cloudtrail get-event-selectors \
 ```
 > **Evidence (SS-12 - CloudTrail Event Selectors):**  
 > ![SS-12: CloudTrail Event Selectors](evidences/12-cloudtrail-event-selector.png)
+
+> **Selector State Verification:** As captured in SS-12 and preserved in `poc-data/cloudtrail-backup/fyp-poc-trail-selectors-before.json`, the initial trail selector logged only `arn:aws:s3:::fyp-persistence-test/`. To capture object-level access for experiment operations, the selector was subsequently updated (see Section 4.5).
 
 ### 4.4 CloudTrail Log Sync & Inspection
 ```bash
@@ -187,18 +189,62 @@ aws --endpoint-url=http://localhost:4567 s3 ls s3://fyp-exfil-sink/synthetic/ --
 > **Evidence (SS-16 - Experiment Objects Uploaded):**  
 > ![SS-16: Experiment Objects Uploaded](evidences/16-experiment-objects-uploaded.png)
 
+#### Event Selector Update for Experiment Buckets
+To capture object-level `GetObject` events across both baseline and experiment buckets, the trail selectors were updated using the configuration stored in `poc-data/cloudtrail-backup/fyp-poc-trail-selectors-updated.json`:
+```json
+{
+  "TrailName": "fyp-poc-trail",
+  "EventSelectors": [
+    {
+      "ReadWriteType": "All",
+      "IncludeManagementEvents": true,
+      "DataResources": [
+        {
+          "Type": "AWS::S3::Object",
+          "Values": [
+            "arn:aws:s3:::fyp-persistence-test/",
+            "arn:aws:s3:::fyp-experiment-data/",
+            "arn:aws:s3:::fyp-exfil-sink/"
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+Applying this updated selector configuration enabled the capture of the 5 experiment `GetObject` events detailed in Section 5.1.2.
+
 ---
 
 ## 5. Test Results & Observed Evidence
 
 ### 5.1 CloudTrail Object Access Events
-`scripts/inspect_cloudtrail.py` verified three matching `GetObject` events for `synthetic/test-data.txt`:
 
-| Event Time (UTC) | Action | Resource | Identity | Error |
-| :--- | :--- | :--- | :--- | :--- |
-| `2026-10-20T12:54:47Z` | `GetObject` | `fyp-persistence-test / synthetic/test-data.txt` | `arn:aws:iam::000000000000:root` | `None` |
-| `2026-10-20T13:08:15Z` | `GetObject` | `fyp-persistence-test / synthetic/test-data.txt` | `arn:aws:iam::000000000000:root` | `None` |
-| `2026-10-20T13:23:04Z` | `GetObject` | `fyp-persistence-test / synthetic/test-data.txt` | `arn:aws:iam::000000000000:root` | `None` *(post-restart)* |
+The audit evidence is organized into two distinct sets: the initial baseline persistence PoC dataset and the subsequent experiment dataset.
+
+#### 5.1.1 Baseline Persistence PoC Access Events (20 October 2026)
+Inspected via `python scripts/inspect_cloudtrail.py --target old-poc` against bucket `fyp-persistence-test`:
+
+| Event Time (UTC) | Action | Resource | Identity | Error | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `2026-10-20T12:54:47Z` | `GetObject` | `fyp-persistence-test / synthetic/test-data.txt` | `arn:aws:iam::000000000000:root` | `None` | Initial CLI verification |
+| `2026-10-20T13:08:15Z` | `GetObject` | `fyp-persistence-test / synthetic/test-data.txt` | `arn:aws:iam::000000000000:root` | `None` | Pre-restart baseline agent access |
+| `2026-10-20T13:23:04Z` | `GetObject` | `fyp-persistence-test / synthetic/test-data.txt` | `arn:aws:iam::000000000000:root` | `None` | Post-restart persistence verification |
+
+*Cross-reference:* Captured in SS-08.
+
+#### 5.1.2 Experiment Data Access Events (27 October 2026)
+Inspected via `python scripts/inspect_cloudtrail.py --target experiment` against bucket `fyp-experiment-data` across 178 log files:
+
+| Event Time (UTC) | Action | Resource | Identity | Error | User Agent / Origin |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `2026-10-27T10:06:26Z` | `GetObject` | `fyp-experiment-data / synthetic/experiment-test-data.txt` | `arn:aws:iam::000000000000:root` | `None` | `aws-cli/2.36.24` (Setup / validation access) |
+| `2026-10-27T10:55:33Z` | `GetObject` | `fyp-experiment-data / synthetic/experiment-test-data.txt` | `arn:aws:iam::000000000000:user/experiment-agent` | `None` | `Boto3/1.43.115` (Agent test execution) |
+| `2026-10-27T11:00:06Z` | `GetObject` | `fyp-experiment-data / synthetic/experiment-test-data.txt` | `arn:aws:iam::000000000000:user/experiment-agent` | `None` | `Boto3/1.43.115` (Agent run) |
+| `2026-10-27T11:00:21Z` | `GetObject` | `fyp-experiment-data / synthetic/experiment-test-data.txt` | `arn:aws:iam::000000000000:user/experiment-agent` | `None` | `Boto3/1.43.115` (Agent run) |
+| `2026-10-27T11:01:40Z` | `GetObject` | `fyp-experiment-data / synthetic/experiment-test-data.txt` | `arn:aws:iam::000000000000:user/experiment-agent` | `None` | `Boto3/1.43.115` (Agent transfer run) |
+
+All 5 events recorded 75 bytes transferred out with no recorded errors. The first event captures the initial CLI setup access as `root`, while the subsequent four events record agent programmatic accesses under `arn:aws:iam::000000000000:user/experiment-agent`.
 
 ### 5.2 Agent-to-Receiver Transfer
 
@@ -210,7 +256,7 @@ aws --endpoint-url=http://localhost:4567 s3 ls s3://fyp-exfil-sink/synthetic/ --
 
 *Integrity verified:* Exact byte size and SHA-256 match confirmed across agent transmission and receiver reception.
 
-The committed experiment logs also contain a 27 October 2026 run with a 75-byte payload, HTTP 200 response, and matching SHA-256 at the receiver. The repository contains two agent-run records and three receiver records overall; these logs do not share a common run ID, so they do not establish one-to-one joins for every transfer and CloudTrail event.
+The committed experiment logs also contain a 27 October 2026 run (`20261027T110141060847Z`) with a 75-byte payload, HTTP 200 response, and matching SHA-256 at the receiver. The repository contains two agent-run records and three receiver records overall. **These logs do not share a common run ID, so they do not establish one-to-one joins for every transfer and CloudTrail event.**
 
 > **Evidence (SS-06 - Agent Run Success):**  
 > ![SS-06: Agent Success](evidences/06-agent-success.png)
@@ -294,13 +340,42 @@ The degradation validation confirmed that the intended transformations were appl
 ---
 
 ## 6. Feasibility Limitations & Mitigations
-1. IAM Policy Enforcement Limitation
-During testing, it was observed that Floci's IAM policy enforcement engine did not actively block unauthorized actions (e.g., a user with a read-only policy could still upload objects).
 
-Mitigation: Because the FYP evaluates detection under degraded evidence rather than prevention, the scripted Python agent's behavior was controlled deterministically via code logic. The agent successfully generated distinct IAMUser ARNs in the CloudTrail logs, which provides the required identity attribution for the monitors. This limitation will be explicitly documented in Section 5.6 of the final report.
+1. **IAM Enforcement Limitation:** During PoC testing, S3 access did not consistently follow expected IAM policy restrictions. The behavior may be related to Floci IAM enforcement configuration and was not conclusively established as an emulator limitation. IAM enforcement is not a core experimental variable in this FYP, which evaluates detection rather than prevention. Therefore, the experiment will use controlled scripted agent behavior and document this limitation.
+2. **Run ID & Correlation Limitation:** Agent logs and receiver transfer logs do not share a common run ID with CloudTrail audit records. While payload sizes and SHA-256 hashes confirm transmission integrity, these logs do not establish one-to-one joins across every individual transfer and audit event.
+3. **Emulator Boundary:** Floci emulates S3 and CloudTrail behaviors locally. This PoC validates testbed feasibility and evidence normalization, but does not claim equivalence to high-scale production AWS environments or evaluate monitor detection effectiveness.
+
 ---
 
-## 7. FYP1 M1 Checklist and Feasibility Assessment
+## 7. Evidence & Screenshot Checklist
+
+All screenshot evidence is stored in `docs/poc/evidences/` and embedded under the corresponding command/section:
+
+| ID | Filename | Description | Location in Document | Priority |
+| :--- | :--- | :--- | :--- | :--- |
+| **SS-01** | `01-floci-container-volume.png` | Container & volume in Docker / terminal | [Section 2.1](#21-floci-container--volume-setup) | Recommended |
+| **SS-02** | `02-floci-api-identity.png` | `sts get-caller-identity` output | [Section 4.1](#41-verify-sts-identity) | **Core** |
+| **SS-03** | `03-synthetic-s3-object.png` | S3 `get-object` showing 75-byte length | [Section 4.2](#42-verify-s3-object-retrieval) | Optional |
+| **SS-04** | `04-cloudtrail-trail-config.png` | Initial `describe-trails` output | [Section 4.3](#43-configure--verify-cloudtrail) | **Core** |
+| **SS-05** | `05-cloudtrail-logging-enabled.png` | `get-trail-status` showing `IsLogging: true` | [Section 4.3](#43-configure--verify-cloudtrail) | **Core** |
+| **SS-06** | `06-agent-success.png` | Agent run log (75 bytes, HTTP 200) | [Section 5.2](#52-agent-to-receiver-transfer) | **Core** |
+| **SS-07** | `07-receiver-hash-match.png` | Receiver JSONL log with matching SHA-256 | [Section 5.2](#52-agent-to-receiver-transfer) | **Core** |
+| **SS-08** | `08-cloudtrail-getobject-events.png` | Inspector output with 3 `GetObject` events | [Section 4.4](#44-cloudtrail-log-sync--inspection) | **Core** |
+| **SS-09** | `09-persistence-after-restart.png` | `docker restart` + active trail status | [Section 5.3](#53-persistence-verification-container-restart) | **Core** |
+| **SS-10** | `10-post-restart-log-sync.png` | S3 sync showing logs after restart | [Section 5.3](#53-persistence-verification-container-restart) | Optional |
+| **SS-11** | `11-cloudtrail-existing-trail.png` | Verified existing trail `fyp-poc-trail` configuration | [Section 4.3](#43-configure--verify-cloudtrail) | **Core** |
+| **SS-12** | `12-cloudtrail-event-selector.png` | Verified trail event selectors for S3 object logging | [Section 4.3](#43-configure--verify-cloudtrail) | **Core** |
+| **SS-13** | `13-source-bucket-created.png` | Creation of experiment source bucket `fyp-experiment-data` | [Section 4.5](#45-experiment-storage-setup-buckets--objects) | **Core** |
+| **SS-14** | `14-exfil-sink-bucket-created.png` | Creation of experiment sink bucket `fyp-exfil-sink` | [Section 4.5](#45-experiment-storage-setup-buckets--objects) | **Core** |
+| **SS-15** | `15-experiment-buckets-verified.png` | Bucket list and region verification (`head-bucket`) | [Section 4.5](#45-experiment-storage-setup-buckets--objects) | **Core** |
+| **SS-16** | `16-experiment-objects-uploaded.png` | Upload verification of 75-byte synthetic payloads | [Section 4.5](#45-experiment-storage-setup-buckets--objects) | **Core** |
+| **SS-17** | `17-complete-detector.png` | Normalized detector input for complete CloudTrail event | [Section 5.4](#54-detector-input-evidence-normalization--validation) | **Core** |
+| **SS-18** | `18-degraded-detector.png` | Normalized detector input for degraded event with provenance | [Section 5.4](#54-detector-input-evidence-normalization--validation) | **Core** |
+| **SS-19** | `19-degradation-validation.png` | Automated degradation validation output (5 records, 0 errors) | [Section 5.4](#54-detector-input-evidence-normalization--validation) | **Core** |
+
+---
+
+## 8. FYP1 M1 Checklist and Feasibility Assessment
 
 The project Gantt places FYP1 M1 at W4 and names the deliverable “PoC checklist and evidence.” Its gate is a proof of concept connecting cloud storage, audit evidence, receiver, and detector input. Status below is based on the evidence committed in this repository; it confirms that all required components are implemented, tested, and evidenced.
 
@@ -308,15 +383,15 @@ The project Gantt places FYP1 M1 at W4 and names the deliverable “PoC checklis
 | :--- | :--- | :--- |
 | Local Floci environment and persistent state demonstrated | **Complete** | SS-01, SS-02, SS-09, and SS-10 document the container, API identity, restart, and post-restart state. |
 | Synthetic S3 object is available and retrievable | **Complete** | SS-03 and SS-16 document 75-byte synthetic object retrieval and deployment across buckets. |
-| CloudTrail object-level logging and `GetObject` evidence demonstrated | **Complete** | SS-04, SS-05, SS-11, and SS-12 document trail configuration and active selectors; SS-08 and Section 5.1 record matching object-read events. |
+| CloudTrail object-level logging and `GetObject` evidence demonstrated | **Complete** | SS-04, SS-05, SS-11, and SS-12 document trail configuration and active selectors; SS-08 and Section 5.1 record matching object-read events across PoC and experiment datasets. |
 | Outbound receiver accepts the agent payload and verifies integrity | **Complete** | SS-06 and SS-07 document the 75-byte transfer, HTTP success, and matching SHA-256. Committed experiment logs also contain matching transfer runs. |
 | Experiment storage environment prepared | **Complete** | SS-13, SS-14, SS-15, and SS-16 document the creation and verification of `fyp-experiment-data` and `fyp-exfil-sink` buckets and object deployment. |
 | Shared detector-input boundary is demonstrated | **Complete** | Implemented in `src/evidence/detector_input.py`, tested via `tests/test_detector_input.py` (2 unit tests passed), verified with complete events (SS-17) and degraded events with provenance separation (SS-18, SS-19). Normalized fields conform to the shared monitor input schema. |
-| M1 checklist and feasibility assessment recorded | **Complete** | All M1 gate criteria satisfied; documented in this report. |
+| M1 checklist and feasibility assessment recorded | **Complete** | All M1 gate criteria evidenced; documented in this report for supervisor review. |
 
 ### Feasibility decision
 
-**Repository-based assessment: FYP1 M1 gate satisfied.** The committed evidence demonstrates the end-to-end feasibility of using Floci to store and retrieve synthetic data, produce and inspect CloudTrail-format object-read events, perform agent-to-receiver transfer with verified SHA-256 integrity, maintain state across container restarts, and normalize audit logs into a unified detector-input boundary under both complete and degraded evidence conditions.
+**Repository-based assessment: Feasibility demonstrated.** The committed evidence demonstrates the technical feasibility of the local emulation testbed across cloud storage, audit event capture, outbound agent transfer, container persistence, and detector-input normalization under complete and degraded conditions. The PoC supports progression to monitor implementation and pilot testing, subject to supervisor review and milestone acceptance.
 
 This is a feasibility assessment confirming that foundational testbed pipelines are operational. The current evidence is based on a local emulator, synthetic payloads, and a controlled PoC record set. It does not evaluate monitoring strategy detection effectiveness, scenario coverage, or experiment results. This assessment does not alter the approved research question, fixed scripted-agent role, three scenarios, two evidence conditions, four monitoring strategies, or planned 520-run matrix. Full monitor evaluation and comparative detection experiments remain scheduled for subsequent milestone phases.
 
@@ -324,8 +399,5 @@ This is a feasibility assessment confirming that foundational testbed pipelines 
 
 1. **Detector-input connection:** Connected via `src/evidence/detector_input.py`, mapping verified CloudTrail events into the normalized schema (`event_time`, `action`, `bucket`, `object_key`, `identity`, `source_ip`, `bytes_transferred_out`, `error_code`). Demonstrated for both complete baseline evidence and degraded evidence.
 2. **Provenance separation:** Provenance data (`source_file`, `source_record_index`) is retained externally in wrapper records and kept strictly isolated from the monitor evidence.
-3. **Checklist verification:** All M1 acceptance criteria have been evidenced and marked complete.
+3. **Checklist verification:** All M1 acceptance criteria have been evidenced and recorded for team and supervisor review.
 
-### Operating note
-
-Audit event timestamps use UTC (`Z`). Convert local CLI timestamps from MYT (`+08:00`) before comparing event times.
